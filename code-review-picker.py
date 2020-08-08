@@ -12,6 +12,7 @@ SLACK_BOT_TOKEN = "xbmj1O***REMOVED***"
 SLACK_TEAM_ID = "***REMOVED***"
 
 MISSING_URL_MSG = "Robby here.  Your missing the URL to your code review, {}."
+global SENDER_NAME
 
 PORT = 5002
 
@@ -29,13 +30,14 @@ def people_generator():
 
 
 def message():
+    global SENDER_NAME
     while (True):
         name_generator = people_generator()
         new_round_msg = "A new round of code reviews have begun.\n"
         
         for user_id, name in name_generator:
             msg = new_round_msg
-            msg += "<@{0}> You have been picked to do a code review by Robbie the Robot.".format(user_id)
+            msg += "<@{0}>, Robbie the Robot has picked you to do a code review for {1}.".format(user_id, SENDER_NAME)
             yield msg
             new_round_msg = ""
 
@@ -48,8 +50,9 @@ MSG_GENERATOR = message()
 @app.route('/review', methods=['POST'])
 def request_code_reviewer():
     """Accept a POST request from Slack, triggered by: /review <text>"""
+    global SENDER_NAME
     sender_id = request.form['user_id']
-    sender_name = PEOPLE_ID[sender_id]
+    SENDER_NAME = PEOPLE_ID[sender_id]
     
     if not is_request_valid(request):
         abort(403)
@@ -57,7 +60,7 @@ def request_code_reviewer():
     if not request_contains_URL(request):    
         return jsonify(
             response_type='ephemeral',  # This part doesn't work.
-            text=MISSING_URL_MSG.format(sender_name)
+            text=MISSING_URL_MSG.format(SENDER_NAME)
         )
 
     return jsonify(
