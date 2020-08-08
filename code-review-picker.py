@@ -29,7 +29,7 @@ def code_review_message(sender_id, url):
     message = []
     
     user_id = ID_CHOOSER.next([sender_id])
-    message.append(CODE_REVIEW_MESSAGE.format(ID_TO_NAME[user_id], ID_TO_NAME[sender_id]))
+    message.append(CODE_REVIEW_MESSAGE.format(user_id, ID_TO_NAME[sender_id]))
     
     message.append(url)
     
