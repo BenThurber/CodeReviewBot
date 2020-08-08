@@ -1,4 +1,4 @@
-people_id = {
+PEOPLE_ID = {
     "UTW3G8AP3":"Ryan Franks", 
     "UU5P96WCC":"Hamish", 
     "UU834MUEB":"Bex", 
