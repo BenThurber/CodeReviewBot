@@ -1,4 +1,4 @@
-PEOPLE_ID = {
+ID_TO_NAME = {
     "UTW3G8AP3":"Ryan Franks", 
     "UU5P96WCC":"Hamish", 
     "UU834MUEB":"Bex", 

@@ -1,16 +1,24 @@
+from people import ID_TO_NAME
 from random import sample
 import pickle
 import os
 
 class IdChooser(object):
     
-    def __init__(self, id_list):
-        assert len(id_list) > 0
-        self.id_list = id_list
+    def __init__(self, id_list, num_dup=3):
+        """max_dup is the maximum number of duplicate users allowed in a 
+        round.  max_dup == 1 means no duplicate users."""
+        self._num_dup = num_dup
+        self._is_new_round = False
+        self.id_list = list(id_list)
+        assert len(self.id_list) > 0
         self.new_round()
     
     
-    def next(self, not_including=set()):
+    def next(self, not_including=[]):
+        """Get the next random user_id.  Doesn't pick user_ids in 
+        not_including, and moves them to the next round if there are no other 
+        ids left to choose."""
         
         # There must be >= 1 ids that are included
         assert len(not_including) < len(self.id_list)
@@ -21,7 +29,7 @@ class IdChooser(object):
             return self.next(not_including)
         
         # Extract unwanted contained in sample 
-        exclusions = set(self.sample).intersection(set(not_including))
+        exclusions = [user_id for user_id in self.sample if user_id in not_including]
         
         # Remove unwanted from sample
         for user_id in exclusions:
@@ -29,7 +37,6 @@ class IdChooser(object):
         
         # If out of ids after removing exclusions, start new round and carry_over exclusions
         if len(self.sample) <= 0:
-            print("Carry Over " + str(exclusions))
             self.new_round(exclusions)
             return self.next(not_including)
         
@@ -45,21 +52,31 @@ class IdChooser(object):
         return next_id
     
     
-    def new_round(self, carry_over=set()):
+    def new_round(self, carry_over=[]):
         """carry_over are any ids that weren't able to be used in the last round"""
-        print("New Round")
+        self._is_new_round = True
+        
         # Create fresh sample
         self.sample = sample(self.id_list, len(self.id_list))
         
-        # Move Carry Over to the second to last space in the list (to be chosen first)
-        #for user_id in carry_over:
-            #self.sample.remove(user_id)
+        # Prevent any more than the maximum duplicates
+        for user_id in set(carry_over):
+            for _ in range(carry_over.count(user_id) - self._num_dup + 1):
+                carry_over.remove(user_id)
+        
+        # Add Carry Over to the second to last space in the list (so its chosen first) 
+        print(carry_over)
         self.sample[-1:-1] = carry_over  # Add in second to last slot
-        print(self.sample)
+        print(list(map(lambda x: ID_TO_NAME[x], self.sample)))
         
     
     def is_new_round(self):
-        return len(self.sample) == 0
+        """I don't like the way this is implemented, but can't think of a 
+        better way to do it.  Unreliable, relies on implementation of outside 
+        code to work right."""
+        result = self._is_new_round
+        self._is_new_round = False
+        return result
         
     
 

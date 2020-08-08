@@ -1,7 +1,8 @@
 import os
 
 from persistant_sample import PersistantSample
-from people import PEOPLE_ID
+from id_chooser import IdChooser
+from people import ID_TO_NAME
 from flask import abort, Flask, jsonify, request
 from urllib.parse import urlparse
 
@@ -11,8 +12,12 @@ SLACK_VERIFICATION_TOKEN = "xoxb-948117482785-1293493043892-rBFq9yFiog1f67Pk98u9
 SLACK_BOT_TOKEN = "xbmj1O***REMOVED***"
 SLACK_TEAM_ID = "***REMOVED***"
 
+#-------Message-Strings-------
 MISSING_URL_MSG = "Robby here.  Your missing the URL to your code review, {}."
-global SENDER_NAME
+NEW_ROUND_MESSAGE = "A new round of code reviews have begun."
+CODE_REVIEW_MESSAGE = "<@{0}>, Robbie the Robot has picked you to do a code review for {1}."
+
+ID_CHOOSER = IdChooser(ID_TO_NAME.keys())
 
 PORT = 5002
 
@@ -20,28 +25,19 @@ PORT = 5002
 app = Flask(__name__)
 
 
-def people_generator():
-    """Return a generator of people from a random PersistantSample."""
-    rand_index = PersistantSample(len(PEOPLE_ID), "people")
-    all_ids = list(PEOPLE_ID.keys())
-    while (not rand_index.is_last()):
-        user_id = all_ids[rand_index.next()]
-        yield user_id, PEOPLE_ID[user_id]
 
-
-def message():
-    global SENDER_NAME
-    while (True):
-        name_generator = people_generator()
-        new_round_msg = "A new round of code reviews have begun.\n"
-        
-        for user_id, name in name_generator:
-            msg = new_round_msg
-            msg += "<@{0}>, Robbie the Robot has picked you to do a code review for {1}.".format(user_id, SENDER_NAME)
-            yield msg
-            new_round_msg = ""
-
-MSG_GENERATOR = message()
+def code_review_message(sender_id, url):
+    message = []
+    
+    user_id = ID_CHOOSER.next([sender_id])
+    message.append(CODE_REVIEW_MESSAGE.format(ID_TO_NAME[user_id], ID_TO_NAME[sender_id]))
+    
+    message.append(url)
+    
+    if ID_CHOOSER.is_new_round():
+        message.insert(0, NEW_ROUND_MESSAGE)
+    
+    return "\n".join(message)
 
 
 
@@ -50,26 +46,28 @@ MSG_GENERATOR = message()
 @app.route('/review', methods=['POST'])
 def request_code_reviewer():
     """Accept a POST request from Slack, triggered by: /review <text>"""
-    global SENDER_NAME
     sender_id = request.form['user_id']
-    SENDER_NAME = PEOPLE_ID[sender_id]
+    sender_name = ID_TO_NAME[sender_id]
     
     if not is_request_valid(request):
         abort(403)
     
-    if not request_contains_URL(request):    
+    # Return no URL entered message
+    if not is_valid_URL(request.form['text']):
         return jsonify(
             response_type='ephemeral',  # This part doesn't work.
-            text=MISSING_URL_MSG.format(SENDER_NAME)
+            text=MISSING_URL_MSG.format(sender_name)
         )
-
+    
+    # Return code review message
     return jsonify(
         response_type='in_channel',
-        text=next(MSG_GENERATOR) + '\n' + request.form['text'],
+        text=code_review_message(sender_id, request.form['text']),
     )
 
 
 def is_request_valid(request):
+    """Check token and team_id"""
     print("Bot Token: " + request.form['token'])
     print("Team Id: " + request.form['team_id'])
     is_token_valid = request.form['token'] == SLACK_BOT_TOKEN
@@ -78,13 +76,11 @@ def is_request_valid(request):
     return is_token_valid and is_team_id_valid
 
 
-def request_contains_URL(request):
+def is_valid_URL(url):
     """Helper function to validate a URL string"""
-    text = request.form['text']
-    print(text)
     
     try:
-        result = urlparse(text)
+        result = urlparse(url)
         return all([result.scheme, result.netloc, result.path])
     except:
         return False    
