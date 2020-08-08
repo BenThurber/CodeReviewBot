@@ -99,7 +99,7 @@ class PersistantIdChooser(IdChooser):
             
         except IOError:  # Create a new file if one doesn't exist
             super().__init__(id_list, num_dup)
-            self._save_state()
+            self.save_obj(self, self.name)
     
     
     def new_round(self, carry_over=[]):
