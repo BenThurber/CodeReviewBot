@@ -1,7 +1,6 @@
 import os
 
-from persistant_sample import PersistantSample
-from id_chooser import IdChooser
+from id_chooser import IdChooser, PersistantIdChooser
 from people import ID_TO_NAME
 from flask import abort, Flask, jsonify, request
 from urllib.parse import urlparse
@@ -17,7 +16,7 @@ MISSING_URL_MSG = "Robby here.  Your missing the URL to your code review, {}."
 NEW_ROUND_MESSAGE = "A new round of code reviews have begun."
 CODE_REVIEW_MESSAGE = "<@{0}>, Robbie the Robot has picked you to do a code review for {1}."
 
-ID_CHOOSER = IdChooser(ID_TO_NAME.keys())
+ID_CHOOSER = PersistantIdChooser(ID_TO_NAME.keys(), "people")
 
 PORT = 5002
 
