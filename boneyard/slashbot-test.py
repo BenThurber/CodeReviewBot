@@ -6,7 +6,7 @@ from slackclient import SlackClient
 import datetime
 
 
-TOKEN = "xbmj1O***REMOVED***"
+TOKEN = os.environ["SLACK_BOT_TOKEN"]
 
 
 def post_annotation(token, text=None, channel='bot', response_to=''):

@@ -6,10 +6,8 @@ from flask import abort, Flask, jsonify, request
 from urllib.parse import urlparse
 
 
-SLACK_VERIFICATION_TOKEN = "xoxb-948117482785-1293493043892-rBFq9yFiog1f67Pk98u9W0MT"  # Not sure what this is for
-
-SLACK_BOT_TOKEN = "xbmj1O***REMOVED***"
-SLACK_TEAM_ID = "***REMOVED***"
+SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
+SLACK_TEAM_ID = os.environ["SLACK_TEAM_ID"]
 
 #-------Message-Strings-------
 MISSING_URL_MSG = "Robby here.  Your missing the URL to your code review, {}."
