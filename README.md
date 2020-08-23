@@ -7,7 +7,8 @@ randomly assign Slack members to review a merge request.
 
 Slack users are shuffled into a random pool (a random sample) and picked until none are left.  If any users weren't 
 picked from the last round (i.e. you request a code review, but your name is the last one in the pool) they are added 
-to the top of the next round.
+to the top of the next round.  The state of the code review round is saved persistantly in `obj/` with Python's pickle 
+library, so the bot server can be started and stopped without losing the order of code reviews.
 
 ### Usage
 In Slack a merge request is chosen by typing `/review <URL>`
@@ -24,7 +25,7 @@ The bot will return a message that looks like:
 • unix machine to host the bot  
 
 #### Start ngrok
-ngrok creates a secure tunnel to your localhost so you don't have to register a domain name for your server.  
+[ngrok](https://ngrok.com/) creates a secure tunnel to your localhost so you don't have to register a domain name for your server.  
 
 cd into the directory containing the ngrok binary for your system `ngrok_mac/` or `ngrok_linux/` and configure your 
 authtoken as described on the ngrok website.  On the machine you will use to host the bot, run the script 
